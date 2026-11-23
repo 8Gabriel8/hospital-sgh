@@ -6,13 +6,16 @@
 <div class="card shadow-sm">
     <div class="card-body">
         <h1 class="h3">Bienvenido, {{ user.username }}</h1>
-        <p class="mb-1">Tu rol:
+        <p class="mb-3">Tu rol:
             {% for grupo in grupos %}
                 <span class="badge bg-secondary">{{ grupo }}</span>
             {% empty %}
                 <span class="text-muted">Sin rol asignado</span>
             {% endfor %}
         </p>
+        {% if user.is_superuser or 'Admisión' in grupos %}
+        <a href="{% url 'pacientes:lista' %}" class="btn btn-primary">Pacientes</a>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

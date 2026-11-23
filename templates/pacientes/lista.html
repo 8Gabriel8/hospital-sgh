@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Pacientes{% endblock %}
+
+{% block contenido %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">Pacientes</h1>
+    <a href="{% url 'pacientes:registrar' %}" class="btn btn-primary">Registrar paciente</a>
+</div>
+<div class="card shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Expediente</th>
+                    <th>Nombre</th>
+                    <th>CURP</th>
+                    <th>Nacimiento</th>
+                    <th>Teléfono</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in pacientes %}
+                <tr>
+                    <td>{{ p.numero_expediente }}</td>
+                    <td>{{ p.nombre }} {{ p.apellido_paterno }} {{ p.apellido_materno }}</td>
+                    <td>{{ p.curp }}</td>
+                    <td>{{ p.fecha_nacimiento|date:"d/m/Y" }}</td>
+                    <td>{{ p.telefono }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center text-muted py-4">Todavía no hay pacientes registrados.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
