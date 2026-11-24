@@ -22,7 +22,7 @@
     <div class="container">
         {% if messages %}
         {% for mensaje in messages %}
-        <div class="alert alert-success">{{ mensaje }}</div>
+        <div class="alert {% if mensaje.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}">{{ mensaje }}</div>
         {% endfor %}
         {% endif %}
         {% block contenido %}{% endblock %}

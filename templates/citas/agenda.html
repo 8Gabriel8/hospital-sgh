@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Agenda de citas{% endblock %}
+
+{% block contenido %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">Agenda de citas</h1>
+    {% if puede_gestionar %}
+    <a href="{% url 'citas:nueva' %}" class="btn btn-primary">Nueva cita</a>
+    {% endif %}
+</div>
+
+<form method="get" class="card shadow-sm mb-3">
+    <div class="card-body row g-3 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label" for="fecha">Fecha</label>
+            <input type="date" id="fecha" name="fecha" value="{{ fecha }}" class="form-control">
+        </div>
+        {% if puede_gestionar %}
+        <div class="col-md-5">
+            <label class="form-label" for="medico">Médico</label>
+            <select id="medico" name="medico" class="form-select">
+                <option value="">Todos</option>
+                {% for m in medicos %}
+                <option value="{{ m.pk }}" {% if medico_id == m.pk|stringformat:"s" %}selected{% endif %}>
+                    Dr(a). {{ m.get_full_name|default:m.username }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        {% endif %}
+        <div class="col-md-3">
+            <button type="submit" class="btn btn-outline-primary">Filtrar</button>
+            <a href="{% url 'citas:agenda' %}" class="btn btn-outline-secondary">Limpiar</a>
+        </div>
+    </div>
+</form>
+
+<div class="card shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Fecha y hora</th>
+                    <th>Paciente</th>
+                    <th>Médico</th>
+                    <th>Motivo</th>
+                    <th>Estado</th>
+                    {% if puede_gestionar %}<th>Acciones</th>{% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in citas %}
+                <tr>
+                    <td>{{ c.inicio|date:"d/m/Y H:i" }}</td>
+                    <td>{{ c.paciente.nombre }} {{ c.paciente.apellido_paterno }}<br>
+                        <small class="text-muted">{{ c.paciente.numero_expediente }}</small></td>
+                    <td>Dr(a). {{ c.medico.get_full_name|default:c.medico.username }}</td>
+                    <td>{{ c.motivo }}{% if c.urgencia_menor %} <span class="badge bg-warning text-dark">Urgencia menor</span>{% endif %}</td>
+                    <td>
+                        {% if c.estado == 'SOLICITADA' %}<span class="badge bg-secondary">Solicitada</span>
+                        {% elif c.estado == 'CONFIRMADA' %}<span class="badge bg-primary">Confirmada</span>
+                        {% elif c.estado == 'ATENDIDA' %}<span class="badge bg-success">Atendida</span>
+                        {% elif c.estado == 'CANCELADA' %}<span class="badge bg-danger">Cancelada</span>
+                        {% else %}<span class="badge bg-dark">No asistió</span>{% endif %}
+                    </td>
+                    {% if puede_gestionar %}
+                    <td>
+                        {% if c.estado == 'SOLICITADA' %}
+                        <form method="post" action="{% url 'citas:confirmar' c.pk %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-success">Confirmar</button>
+                        </form>
+                        {% endif %}
+                        {% if c.estado == 'SOLICITADA' or c.estado == 'CONFIRMADA' %}
+                        <form method="post" action="{% url 'citas:cancelar' c.pk %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Cancelar</button>
+                        </form>
+                        {% endif %}
+                    </td>
+                    {% endif %}
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center text-muted py-4">No hay citas para mostrar.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

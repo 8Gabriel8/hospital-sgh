@@ -15,6 +15,9 @@
         </p>
         {% if user.is_superuser or 'Admisión' in grupos %}
         <a href="{% url 'pacientes:lista' %}" class="btn btn-primary">Pacientes</a>
+        <a href="{% url 'citas:agenda' %}" class="btn btn-primary">Citas</a>
+        {% elif 'Médico' in grupos %}
+        <a href="{% url 'citas:agenda' %}" class="btn btn-primary">Mi agenda</a>
         {% endif %}
     </div>
 </div>
