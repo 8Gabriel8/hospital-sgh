@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Mis pacientes{% endblock %}
+
+{% block contenido %}
+<h1 class="h3 mb-3">Mis pacientes</h1>
+<div class="card shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Expediente</th>
+                    <th>Paciente</th>
+                    <th>Nacimiento</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in pacientes %}
+                <tr>
+                    <td>{{ p.numero_expediente }}</td>
+                    <td>{{ p.nombre }} {{ p.apellido_paterno }} {{ p.apellido_materno }}</td>
+                    <td>{{ p.fecha_nacimiento|date:"d/m/Y" }}</td>
+                    <td class="text-end">
+                        <a href="{% url 'expedientes:detalle' p.pk %}" class="btn btn-sm btn-primary">Abrir expediente</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center text-muted py-4">No tienes pacientes con citas activas.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

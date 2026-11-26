@@ -19,6 +19,9 @@
         {% elif 'Médico' in grupos %}
         <a href="{% url 'citas:agenda' %}" class="btn btn-primary">Mi agenda</a>
         {% endif %}
+        {% if 'Médico' in grupos %}
+        <a href="{% url 'expedientes:lista' %}" class="btn btn-primary">Expedientes</a>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

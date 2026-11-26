@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Expediente clínico{% endblock %}
+
+{% block contenido %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">Expediente clínico</h1>
+    <a href="{% url 'expedientes:lista' %}" class="btn btn-outline-secondary">Volver</a>
+</div>
+
+<div class="card shadow-sm mb-3">
+    <div class="card-body">
+        <h2 class="h5">{{ paciente.nombre }} {{ paciente.apellido_paterno }} {{ paciente.apellido_materno }}</h2>
+        <p class="mb-0 text-muted">
+            {{ paciente.numero_expediente }} · CURP {{ paciente.curp }} · Nacimiento {{ paciente.fecha_nacimiento|date:"d/m/Y" }}
+        </p>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body p-4">
+        <form method="post">
+            {% csrf_token %}
+            {{ form.version_esperada }}
+            {% for campo in form.visible_fields %}
+            <div class="mb-3">
+                <label class="form-label" for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+                {{ campo }}
+                {% for error in campo.errors %}
+                <div class="text-danger small">{{ error }}</div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+            <button type="submit" class="btn btn-primary">Guardar cambios</button>
+        </form>
+        <p class="text-muted small mt-3 mb-0">
+            Versión {{ expediente.version }}
+            {% if expediente.actualizado_por %}
+            · Última actualización: {{ expediente.actualizado_en|date:"d/m/Y H:i" }}
+            por {{ expediente.actualizado_por.get_full_name|default:expediente.actualizado_por.username }}
+            {% endif %}
+        </p>
+    </div>
+</div>
+{% endblock %}
