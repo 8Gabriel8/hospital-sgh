@@ -3,11 +3,12 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_POST
 
 from citas.models import Cita
 from pacientes.models import Paciente
 
-from .forms import ExpedienteForm
+from .forms import ConsultaForm, ExpedienteForm
 from .models import Expediente
 
 
@@ -17,6 +18,16 @@ def es_medico(user):
 
 def citas_activas_del_medico(user):
     return Cita.objects.filter(medico=user).exclude(estado=Cita.Estado.CANCELADA)
+
+
+def paciente_con_relacion(request, paciente_id):
+    if not es_medico(request.user):
+        raise PermissionDenied
+    paciente = get_object_or_404(Paciente, pk=paciente_id, activo=True)
+    relacion = citas_activas_del_medico(request.user).filter(paciente=paciente).exists()
+    if not relacion:
+        raise PermissionDenied
+    return paciente
 
 
 @login_required
@@ -32,13 +43,7 @@ def lista(request):
 
 @login_required
 def detalle(request, paciente_id):
-    if not es_medico(request.user):
-        raise PermissionDenied
-    paciente = get_object_or_404(Paciente, pk=paciente_id, activo=True)
-    relacion = citas_activas_del_medico(request.user).filter(paciente=paciente).exists()
-    if not relacion:
-        raise PermissionDenied
-
+    paciente = paciente_con_relacion(request, paciente_id)
     expediente, _ = Expediente.objects.get_or_create(paciente=paciente)
 
     if request.method == 'POST':
@@ -65,5 +70,41 @@ def detalle(request, paciente_id):
             instance=expediente, initial={'version_esperada': expediente.version}
         )
 
-    contexto = {'paciente': paciente, 'expediente': expediente, 'form': form}
+    contexto = {
+        'paciente': paciente,
+        'expediente': expediente,
+        'form': form,
+        'consulta_form': ConsultaForm(medico=request.user, paciente=paciente),
+        'consultas': expediente.consultas.select_related('medico', 'cita'),
+    }
+    return render(request, 'expedientes/detalle.html', contexto)
+
+
+@login_required
+@require_POST
+def registrar_consulta(request, paciente_id):
+    paciente = paciente_con_relacion(request, paciente_id)
+    expediente, _ = Expediente.objects.get_or_create(paciente=paciente)
+    consulta_form = ConsultaForm(request.POST, medico=request.user, paciente=paciente)
+
+    if consulta_form.is_valid():
+        with transaction.atomic():
+            consulta = consulta_form.save(commit=False)
+            consulta.expediente = expediente
+            consulta.medico = request.user
+            consulta.save()
+            if consulta.cita:
+                consulta.cita.cambiar_estado(Cita.Estado.ATENDIDA)
+        messages.success(request, 'Consulta registrada correctamente.')
+        return redirect('expedientes:detalle', paciente_id=paciente.pk)
+
+    contexto = {
+        'paciente': paciente,
+        'expediente': expediente,
+        'form': ExpedienteForm(
+            instance=expediente, initial={'version_esperada': expediente.version}
+        ),
+        'consulta_form': consulta_form,
+        'consultas': expediente.consultas.select_related('medico', 'cita'),
+    }
     return render(request, 'expedientes/detalle.html', contexto)

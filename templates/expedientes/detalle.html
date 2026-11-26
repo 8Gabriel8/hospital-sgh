@@ -17,8 +17,9 @@
     </div>
 </div>
 
-<div class="card shadow-sm">
+<div class="card shadow-sm mb-4">
     <div class="card-body p-4">
+        <h2 class="h5 mb-3">Datos generales</h2>
         <form method="post">
             {% csrf_token %}
             {{ form.version_esperada }}
@@ -42,4 +43,44 @@
         </p>
     </div>
 </div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-body p-4">
+        <h2 class="h5 mb-3">Nueva consulta</h2>
+        <form method="post" action="{% url 'expedientes:consulta' paciente.pk %}">
+            {% csrf_token %}
+            {% for campo in consulta_form %}
+            <div class="mb-3">
+                <label class="form-label" for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+                {{ campo }}
+                {% for error in campo.errors %}
+                <div class="text-danger small">{{ error }}</div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+            <button type="submit" class="btn btn-success">Registrar consulta</button>
+        </form>
+    </div>
+</div>
+
+<h2 class="h5 mb-3">Historial de consultas</h2>
+{% for c in consultas %}
+<div class="card shadow-sm mb-2">
+    <div class="card-body">
+        <div class="d-flex justify-content-between">
+            <strong>{{ c.fecha_hora|date:"d/m/Y H:i" }}</strong>
+            <span class="text-muted small">Dr(a). {{ c.medico.get_full_name|default:c.medico.username }}</span>
+        </div>
+        {% if c.cita %}
+        <div class="text-muted small mb-2">Cita del {{ c.cita.inicio|date:"d/m/Y H:i" }}</div>
+        {% endif %}
+        <p class="mb-1"><strong>Diagnóstico:</strong> {{ c.diagnostico|linebreaksbr }}</p>
+        {% if c.observaciones %}
+        <p class="mb-0"><strong>Observaciones:</strong> {{ c.observaciones|linebreaksbr }}</p>
+        {% endif %}
+    </div>
+</div>
+{% empty %}
+<div class="text-muted">Todavía no hay consultas registradas.</div>
+{% endfor %}
 {% endblock %}

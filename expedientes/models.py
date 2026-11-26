@@ -31,3 +31,30 @@ class Expediente(models.Model):
 
     def __str__(self):
         return f'Expediente de {self.paciente}'
+
+
+class Consulta(models.Model):
+    expediente = models.ForeignKey(
+        Expediente, on_delete=models.PROTECT, related_name='consultas'
+    )
+    cita = models.OneToOneField(
+        'citas.Cita',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='consulta',
+    )
+    medico = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name='consultas_realizadas',
+    )
+    fecha_hora = models.DateTimeField(auto_now_add=True)
+    diagnostico = models.TextField()
+    observaciones = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ['-fecha_hora']
+
+    def __str__(self):
+        return f'Consulta de {self.expediente.paciente} ({self.fecha_hora:%d/%m/%Y})'
